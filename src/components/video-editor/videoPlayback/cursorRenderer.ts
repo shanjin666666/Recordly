@@ -16,6 +16,7 @@ import {
 	DEFAULT_CURSOR_STYLE,
 	normalizeCursorClickEffectColor,
 } from "../types";
+import { getCursorViewportScale } from "./cursorScale";
 import { computeCursorSwayRotation } from "./cursorSway";
 import { type CursorViewportRect, projectCursorPositionToViewport } from "./cursorViewport";
 import {
@@ -110,8 +111,7 @@ export interface CursorRenderConfig {
 	style: CursorStyle;
 }
 
-const REFERENCE_WIDTH = 1920;
-const MIN_CURSOR_VIEWPORT_SCALE = 0.55;
+const MIN_CURSOR_VIEWPORT_SCALE = 0;
 const CURSOR_MOTION_BLUR_BASE_MULTIPLIER = 0.08;
 const CURSOR_TIME_DISCONTINUITY_MS = 100;
 const CURSOR_SWAY_SMOOTHING_MULTIPLIER = 0.7;
@@ -807,13 +807,6 @@ function findLatestStableCursorType(samples: CursorTelemetryPoint[], timeMs: num
 	return findLatestSample(samples, timeMs)?.cursorType ?? "arrow";
 }
 
-function getCursorViewportScale(
-	viewport: CursorViewportRect,
-	minViewportScale = MIN_CURSOR_VIEWPORT_SCALE,
-) {
-	return Math.max(minViewportScale, viewport.width / REFERENCE_WIDTH);
-}
-
 function getCursorSwaySpringConfig(smoothingFactor: number, springTuning: CursorSpringTuning) {
 	const baseConfig = getCursorSpringConfig(
 		Math.min(
@@ -1231,6 +1224,10 @@ export class PixiCursorOverlay {
 		}
 	}
 
+	setFilterResolution(resolution: number) {
+		this.cursorMotionBlurFilter.resolution = Math.max(1, resolution);
+	}
+
 	setClickBounce(clickBounce: number) {
 		this.config.clickBounce = Math.max(0, clickBounce);
 	}
@@ -1346,7 +1343,7 @@ export class PixiCursorOverlay {
 
 		const h =
 			this.config.dotRadius *
-			getCursorViewportScale(viewport, this.config.minViewportScale);
+			getCursorViewportScale(viewport.width, this.config.minViewportScale);
 		const { cursorType, clickSample, clickBounceProgress, clickProgress } =
 			getCursorVisualState(
 				samples,
@@ -1642,7 +1639,7 @@ export function drawCursorOnCanvas(
 
 	const px = viewport.x + smoothedState.x * viewport.width;
 	const py = viewport.y + smoothedState.y * viewport.height;
-	const h = config.dotRadius * getCursorViewportScale(viewport, config.minViewportScale);
+	const h = config.dotRadius * getCursorViewportScale(viewport.width, config.minViewportScale);
 	const { cursorType, clickSample, clickBounceProgress, clickProgress } = getCursorVisualState(
 		samples,
 		timeMs,

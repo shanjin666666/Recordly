@@ -6,6 +6,7 @@ import {
 	normalizeBrowserMicrophoneProfile,
 	resolveBrowserCaptureCursorPolicy,
 	shouldUseNativeWindowsCaptureForSource,
+	stopAndDiscardNativeCapture,
 } from "./useScreenRecorder";
 
 type RecordingState = "inactive" | "recording" | "paused";
@@ -170,6 +171,65 @@ describe("shouldUseNativeWindowsCaptureForSource", () => {
 
 	it("keeps browser capture for non-desktop sources", () => {
 		expect(shouldUseNativeWindowsCaptureForSource({ id: "browser-tab:abc" })).toBe(false);
+	});
+});
+
+describe("stopAndDiscardNativeCapture", () => {
+	it("deletes the partial recording after a successful warm-start stop", async () => {
+		const deleteRecordingFile = vi.fn().mockResolvedValue(undefined);
+
+		await expect(
+			stopAndDiscardNativeCapture({
+				stopNativeScreenRecording: vi.fn().mockResolvedValue({
+					success: true,
+					path: "C:\\Recordly\\warm-start.mp4",
+				}),
+				deleteRecordingFile,
+			}),
+		).resolves.toEqual({
+			stopSucceeded: true,
+			deleteSucceeded: true,
+			path: "C:\\Recordly\\warm-start.mp4",
+		});
+		expect(deleteRecordingFile).toHaveBeenCalledWith("C:\\Recordly\\warm-start.mp4");
+	});
+
+	it("reports an unsuccessful stop without deleting or confirming cleanup", async () => {
+		const deleteRecordingFile = vi.fn();
+
+		await expect(
+			stopAndDiscardNativeCapture({
+				stopNativeScreenRecording: vi.fn().mockResolvedValue({
+					success: false,
+					error: "helper still running",
+				}),
+				deleteRecordingFile,
+			}),
+		).resolves.toEqual({
+			stopSucceeded: false,
+			deleteSucceeded: false,
+			error: "helper still running",
+		});
+		expect(deleteRecordingFile).not.toHaveBeenCalled();
+	});
+
+	it("keeps the stopped path available when deletion fails so cleanup can retry", async () => {
+		const deleteError = new Error("file locked");
+
+		await expect(
+			stopAndDiscardNativeCapture({
+				stopNativeScreenRecording: vi.fn().mockResolvedValue({
+					success: true,
+					path: "C:\\Recordly\\warm-start.mp4",
+				}),
+				deleteRecordingFile: vi.fn().mockRejectedValue(deleteError),
+			}),
+		).resolves.toEqual({
+			stopSucceeded: true,
+			deleteSucceeded: false,
+			path: "C:\\Recordly\\warm-start.mp4",
+			error: deleteError,
+		});
 	});
 });
 

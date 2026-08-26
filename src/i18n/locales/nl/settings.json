@@ -43,7 +43,7 @@
 			"amongus": "Among Us",
 			"turtle": "Schildpad"
 		},
-		"backgroundBlur": "Achtergrondvervaging",
+		"backgroundBlur": "Vervaging",
 		"zoomMotionBlur": "Zoom-bewegingsonscherpte",
 		"temporalZoomMotionBlur": "Temporal Zoom Blur",
 		"temporalZoomMotionBlurDescription": "Control the shutter window and frame samples used by the newer zoom blur pass.",

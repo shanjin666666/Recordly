@@ -1380,6 +1380,7 @@ export class FrameRenderer {
 				this.backgroundBlurFilter.blur = this.config.backgroundBlur * 3;
 				this.backgroundBlurFilter.quality = 4;
 				this.backgroundBlurFilter.resolution = this.app?.renderer.resolution ?? 1;
+				this.backgroundBlurFilter.repeatEdgePixels = true;
 				this.backgroundSprite.filters = [this.backgroundBlurFilter];
 			}
 		} else if (this.backgroundTextureSource) {
@@ -1410,8 +1411,16 @@ export class FrameRenderer {
 		}
 
 		blurredCtx.save();
-		blurredCtx.filter = `blur(${this.config.backgroundBlur * 3}px)`;
-		blurredCtx.drawImage(sourceCanvas, 0, 0, blurredCanvas.width, blurredCanvas.height);
+		const blurPx = this.config.backgroundBlur * 3;
+		const overscan = Math.ceil(blurPx * 2);
+		blurredCtx.filter = `blur(${blurPx}px)`;
+		blurredCtx.drawImage(
+			sourceCanvas,
+			-overscan,
+			-overscan,
+			blurredCanvas.width + overscan * 2,
+			blurredCanvas.height + overscan * 2,
+		);
 		blurredCtx.restore();
 
 		return blurredCanvas;

@@ -10,6 +10,7 @@ import {
 	resizeHudOverlayFallbackBounds,
 	shouldExpandHudOverlayFallback,
 } from "./hudOverlayBounds";
+import { getHudOverlayTaskbarOptions } from "./hudOverlayWindowOptions";
 import { getPackagedRendererBaseUrl } from "./rendererServer";
 
 const electronWindowsDir = path.dirname(fileURLToPath(import.meta.url));
@@ -290,9 +291,7 @@ function setHudOverlayMousePassthrough(ignore: boolean) {
 	hudOverlayIgnoringMouse =
 		hudOverlaySourceSelectionActive && !hudOverlayRecordingActive
 			? true
-			: hudOverlayRecordingActive
-				? false
-				: ignore;
+			: ignore;
 
 	if (hudOverlayMouseReassertTimer) {
 		clearTimeout(hudOverlayMouseReassertTimer);
@@ -306,8 +305,6 @@ function setHudOverlayMousePassthrough(ignore: boolean) {
 	if (hudOverlayRecordingActive) {
 		hudOverlayFallbackExpanded = false;
 		applyHudOverlayBounds();
-		hudOverlayWindow.setIgnoreMouseEvents(false);
-		return;
 	}
 
 	if (!isHudOverlayMousePassthroughSupported()) {
@@ -468,10 +465,11 @@ export function createHudOverlayWindow(): BrowserWindow {
 		backgroundColor: "#00000000",
 		resizable: false,
 		alwaysOnTop: true,
-		skipTaskbar: true,
+		// The HUD is Recordly's persistent top-level window, so it owns the
+		// Windows taskbar entry while auxiliary overlays stay hidden there.
+		...getHudOverlayTaskbarOptions(process.platform),
 		hasShadow: false,
 		show: false,
-		focusable: false,
 		webPreferences: {
 			preload: path.join(electronWindowsDir, "preload.mjs"),
 			nodeIntegration: false,
@@ -486,7 +484,13 @@ export function createHudOverlayWindow(): BrowserWindow {
 			return;
 		}
 		hasShownHudWindow = true;
-		win.show();
+		if (process.platform === "win32") {
+			// A focusable window is required for a Windows taskbar entry, but the
+			// always-on-top HUD must not steal focus when Recordly starts.
+			win.showInactive();
+		} else {
+			win.show();
+		}
 		win.moveTop();
 		if (process.platform === "win32" && isHudOverlayMousePassthroughSupported()) {
 			win.setIgnoreMouseEvents(false);
@@ -638,11 +642,6 @@ export function reassertHudOverlayMousePassthrough(): void {
 		return;
 	}
 
-	if (hudOverlayRecordingActive) {
-		hud.setIgnoreMouseEvents(false);
-		return;
-	}
-
 	// Toggle off then back on so the native WS_EX_TRANSPARENT flag is fully
 	// re-initialised rather than merely re-asserted in a potentially broken state.
 	hud.setIgnoreMouseEvents(false);
@@ -661,7 +660,10 @@ export function setHudOverlayRecordingActive(recording: boolean): void {
 	hudOverlayRecordingActive = Boolean(recording);
 	hudOverlayFallbackExpanded = false;
 	applyHudOverlayBounds();
-	setHudOverlayMousePassthrough(!hudOverlayRecordingActive);
+	// Start in passthrough mode. Forwarded pointer movement lets the renderer
+	// make the visible HUD controls interactive when the pointer reaches them,
+	// while transparent parts never block the recorded application.
+	setHudOverlayMousePassthrough(true);
 }
 
 export function createUpdateToastWindow(): BrowserWindow {
@@ -699,7 +701,12 @@ export function createUpdateToastWindow(): BrowserWindow {
 		win.setAlwaysOnTop(true, "status");
 	}
 
-	win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+	win.setVisibleOnAllWorkspaces(true, {
+		visibleOnFullScreen: true,
+		// Keep Recordly a foreground application so macOS does not temporarily
+		// remove its Dock icon while showing an overlay window.
+		skipTransformProcessType: process.platform === "darwin",
+	});
 	updateToastWindow = win;
 
 	win.on("closed", () => {
@@ -1007,7 +1014,12 @@ export function createCountdownWindow(): BrowserWindow {
 
 	countdownWindow = win;
 
-	win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+	win.setVisibleOnAllWorkspaces(true, {
+		visibleOnFullScreen: true,
+		// Keep Recordly a foreground application so macOS does not temporarily
+		// remove its Dock icon while showing the countdown.
+		skipTransformProcessType: process.platform === "darwin",
+	});
 
 	win.webContents.on("did-finish-load", () => {
 		if (!win.isDestroyed()) {

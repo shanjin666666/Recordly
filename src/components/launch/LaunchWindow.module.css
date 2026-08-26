@@ -95,8 +95,6 @@
 	color: #4eeeb0;
 }
 
-
-
 .menuCard {
 	width: 300px;
 	max-height: 400px;
@@ -250,6 +248,13 @@
 	border-radius: 50%;
 	background: #fff;
 	transition: all 0.2s ease;
+}
+
+.stopSquare {
+	width: 15px;
+	height: 15px;
+	border-radius: 3px;
+	background: #fff;
 }
 
 .recDotBlink {

@@ -236,12 +236,12 @@ describe("ModernVideoExporter native static-layout eligibility", () => {
 		).toBeNull();
 	});
 
-	it("scales native static-layout cursor size with a minimum visible floor", () => {
+	it("preserves the cursor-to-video ratio at every native static-layout size", () => {
 		const exporter = createExporter({ cursorSize: 3, cursorStyle: "tahoe" });
 
 		expect(exporter.getNativeStaticLayoutCursorSize(1920)).toBeCloseTo(84, 6);
-		expect(exporter.getNativeStaticLayoutCursorSize(960)).toBeCloseTo(46.2, 6);
-		expect(exporter.getNativeStaticLayoutCursorSize(480)).toBeCloseTo(46.2, 6);
+		expect(exporter.getNativeStaticLayoutCursorSize(960)).toBeCloseTo(42, 6);
+		expect(exporter.getNativeStaticLayoutCursorSize(480)).toBeCloseTo(21, 6);
 	});
 
 	it("skips native static-layout when cursor click effects are enabled", () => {

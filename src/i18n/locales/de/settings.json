@@ -43,7 +43,7 @@
             "amongus": "Among Us",
             "turtle": "Turtle"
         },
-		"backgroundBlur": "Hintergrundunschärfe",
+		"backgroundBlur": "Unschärfe",
         "zoomMotionBlur": "Zoom-Bewegungsunschärfe",
         "temporalZoomMotionBlur": "Zeitliche Zoom-Bewegungsunschärfe",
         "temporalZoomMotionBlurDescription": "Steuert das Verschlussfenster und die Bildausschnitte, die vom neueren Zoom-Bewegungsunschärfe-Durchlauf verwendet werden.",

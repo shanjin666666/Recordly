@@ -43,7 +43,7 @@
 			"amongus": "Among Us",
 			"turtle": "Turtle"
 		},
-		"backgroundBlur": "배경 블러",
+		"backgroundBlur": "블러",
 		"zoomMotionBlur": "확대 모션 블러",
 		"temporalZoomMotionBlur": "Temporal Zoom Blur",
 		"temporalZoomMotionBlurDescription": "Control the shutter window and frame samples used by the newer zoom blur pass.",

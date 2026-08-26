@@ -25,6 +25,7 @@ import {
 	SNAP_TO_EDGES_RATIO_AUTO,
 } from "@/components/video-editor/videoPlayback/cursorFollowCamera";
 import { buildNativeCursorAtlas } from "@/components/video-editor/videoPlayback/cursorRenderer";
+import { getCursorViewportScale } from "@/components/video-editor/videoPlayback/cursorScale";
 import {
 	computePaddedLayout,
 	scalePreviewBorderRadius,
@@ -92,6 +93,7 @@ import type {
 	ExportRenderBackend,
 	ExportResult,
 } from "./types";
+import { ENCODED_H264_COLOR_SPACE_FALLBACK, EXPORT_CANVAS_COLOR_SPACE } from "./videoColorSpace";
 
 interface VideoExporterConfig extends ExportConfig {
 	videoUrl: string;
@@ -2089,7 +2091,7 @@ export class ModernVideoExporter {
 
 	private getNativeStaticLayoutCursorSize(contentWidth: number) {
 		const cursorStyle = this.config.cursorStyle ?? "tahoe";
-		const viewportScale = Math.max(0.55, contentWidth / 1920);
+		const viewportScale = getCursorViewportScale(contentWidth);
 		return (
 			28 *
 			(this.config.cursorSize ?? 3) *
@@ -2725,9 +2727,11 @@ export class ModernVideoExporter {
 			if (this.nativeEncoderError) throw this.nativeEncoderError;
 		}
 		const canvas = this.renderer!.getCanvas();
+		// @ts-expect-error - colorSpace is supported at runtime but missing from this DOM typing.
 		const frame = new VideoFrame(canvas, {
 			timestamp,
 			duration: frameDuration,
+			colorSpace: EXPORT_CANVAS_COLOR_SPACE,
 		});
 		this.nativeH264Encoder.encode(frame, { keyFrame: frameIndex % 300 === 0 });
 		frame.close();
@@ -2956,12 +2960,7 @@ export class ModernVideoExporter {
 		const exportFrame = new VideoFrame(canvas, {
 			timestamp,
 			duration: frameDuration,
-			colorSpace: {
-				primaries: "bt709",
-				transfer: "iec61966-2-1",
-				matrix: "rgb",
-				fullRange: true,
-			},
+			colorSpace: EXPORT_CANVAS_COLOR_SPACE,
 		});
 
 		while (
@@ -3376,12 +3375,8 @@ export class ModernVideoExporter {
 					try {
 						if (isFirstChunk && this.videoDescription) {
 							// Add decoder config for the first chunk
-							const colorSpace = this.videoColorSpace || {
-								primaries: "bt709",
-								transfer: "iec61966-2-1",
-								matrix: "rgb",
-								fullRange: true,
-							};
+							const colorSpace =
+								this.videoColorSpace || ENCODED_H264_COLOR_SPACE_FALLBACK;
 
 							const metadata: EncodedVideoChunkMetadata = {
 								decoderConfig: {

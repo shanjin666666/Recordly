@@ -43,7 +43,7 @@
 			"amongus": "Among Us",
 			"turtle": "Tartaruga"
 		},
-		"backgroundBlur": "Sfocatura sfondo",
+		"backgroundBlur": "Sfocatura",
 		"zoomMotionBlur": "Motion blur dello zoom",
 		"temporalZoomMotionBlur": "Sfocatura zoom temporale",
 		"temporalZoomMotionBlurDescription": "Controlla la finestra dell'otturatore e i campioni di frame usati dal nuovo passaggio di sfocatura zoom.",

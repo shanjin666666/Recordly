@@ -11,7 +11,21 @@ vi.mock("electron", () => ({
 	},
 }));
 
-import { repairBundledUiohookBinaryForCurrentArch } from "./interaction";
+import {
+	repairBundledUiohookBinaryForCurrentArch,
+	shouldStartGlobalInteractionHook,
+} from "./interaction";
+
+describe("shouldStartGlobalInteractionHook", () => {
+	it("does not start the synchronous uiohook event tap on macOS", () => {
+		expect(shouldStartGlobalInteractionHook("darwin")).toBe(false);
+	});
+
+	it("keeps global interaction capture enabled on Windows and Linux", () => {
+		expect(shouldStartGlobalInteractionHook("win32")).toBe(true);
+		expect(shouldStartGlobalInteractionHook("linux")).toBe(true);
+	});
+});
 
 describe("repairBundledUiohookBinaryForCurrentArch", () => {
 	const tempRoots: string[] = [];

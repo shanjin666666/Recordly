@@ -65,6 +65,7 @@ import {
 	finalizeStoredVideo,
 	muxNativeMacRecordingWithAudio,
 	recoverNativeMacCaptureOutput,
+	waitForNativeCaptureCommand,
 	waitForNativeCaptureStart,
 	waitForNativeCaptureStop,
 } from "../recording/mac";
@@ -1314,7 +1315,12 @@ export function registerRecordingHandlers(
 		}
 
 		try {
+			const commandApplied = waitForNativeCaptureCommand(
+				nativeCaptureProcess,
+				"Recording paused",
+			);
 			nativeCaptureProcess.stdin.write("pause\n");
+			await commandApplied;
 			setNativeCapturePaused(true);
 			return { success: true };
 		} catch (error) {
@@ -1365,7 +1371,12 @@ export function registerRecordingHandlers(
 		}
 
 		try {
+			const commandApplied = waitForNativeCaptureCommand(
+				nativeCaptureProcess,
+				"Recording resumed",
+			);
 			nativeCaptureProcess.stdin.write("resume\n");
+			await commandApplied;
 			setNativeCapturePaused(false);
 			return { success: true };
 		} catch (error) {

@@ -1,4 +1,11 @@
-import { MicrophoneIcon, MicrophoneSlashIcon, MinusIcon, PauseIcon, PlayIcon, SquareIcon, XIcon } from "@phosphor-icons/react";
+import {
+	MicrophoneIcon,
+	MicrophoneSlashIcon,
+	MinusIcon,
+	PauseIcon,
+	PlayIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useScopedT } from "@/contexts/I18nContext";
 import { Button } from "@/components/ui/button";
@@ -94,17 +101,15 @@ export const RecordingControls = ({
 					)}
 				</Button>
 
-				<Button
-					variant="ghost"
-					size="icon"
-					iconSize="lg"
+				<button
+					type="button"
 					onClick={onStopRecording}
 					title={t("recording.stop")}
 					aria-label={t("recording.stop")}
-					className={styles.ibRed}
+					className={`${styles.recBtn} ${styles.electronNoDrag}`}
 				>
-					<SquareIcon size={16} fill="currentColor" strokeWidth={0} />
-				</Button>
+					<span className={styles.stopSquare} />
+				</button>
 
 				<Button
 					variant="ghost"

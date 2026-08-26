@@ -2225,8 +2225,10 @@ export class FrameRenderer {
 
 			if (this.config.backgroundBlur > 0) {
 				ctx.save();
-				ctx.filter = `blur(${this.config.backgroundBlur * 3}px)`;
-				ctx.drawImage(bgCanvas, 0, 0, w, h);
+				const blurPx = this.config.backgroundBlur * 3;
+				const overscan = Math.ceil(blurPx * 2);
+				ctx.filter = `blur(${blurPx}px)`;
+				ctx.drawImage(bgCanvas, -overscan, -overscan, w + overscan * 2, h + overscan * 2);
 				ctx.restore();
 			} else {
 				ctx.drawImage(bgCanvas, 0, 0, w, h);

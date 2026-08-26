@@ -43,7 +43,7 @@
 			"amongus": "Among Us",
 			"turtle": "Turtle"
 		},
-		"backgroundBlur": "背景模糊",
+		"backgroundBlur": "模糊",
 		"zoomMotionBlur": "缩放运动模糊",
 		"temporalZoomMotionBlur": "Temporal Zoom Blur",
 		"temporalZoomMotionBlurDescription": "Control the shutter window and frame samples used by the newer zoom blur pass.",

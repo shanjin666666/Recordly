@@ -8,8 +8,8 @@ import type {
 	CursorStyle,
 	CursorTelemetryPoint,
 	Padding,
-	SpeedRegion,
 	SourceAudioTrackSettings,
+	SpeedRegion,
 	TrimRegion,
 	WebcamOverlaySettings,
 	ZoomMotionBlurTuning,
@@ -38,6 +38,7 @@ import type {
 	ExportProgress,
 	ExportResult,
 } from "./types";
+import { ENCODED_H264_COLOR_SPACE_FALLBACK, EXPORT_CANVAS_COLOR_SPACE } from "./videoColorSpace";
 
 const DEFAULT_MAX_ENCODE_QUEUE = 240;
 const PROGRESS_SAMPLE_WINDOW_MS = 1_000;
@@ -825,12 +826,7 @@ export class VideoExporter {
 		const frame = new VideoFrame(canvas, {
 			timestamp,
 			duration: frameDuration,
-			colorSpace: {
-				primaries: "bt709",
-				transfer: "iec61966-2-1",
-				matrix: "rgb",
-				fullRange: true,
-			},
+			colorSpace: EXPORT_CANVAS_COLOR_SPACE,
 		});
 		this.nativeH264Encoder.encode(frame, { keyFrame: frameIndex % 300 === 0 });
 		frame.close();
@@ -1077,12 +1073,7 @@ export class VideoExporter {
 		const exportFrame = new VideoFrame(canvas, {
 			timestamp,
 			duration: frameDuration,
-			colorSpace: {
-				primaries: "bt709",
-				transfer: "iec61966-2-1",
-				matrix: "rgb",
-				fullRange: true,
-			},
+			colorSpace: EXPORT_CANVAS_COLOR_SPACE,
 		});
 
 		while (
@@ -1270,12 +1261,8 @@ export class VideoExporter {
 					try {
 						if (isFirstChunk && this.videoDescription) {
 							// Add decoder config for the first chunk
-							const colorSpace = this.videoColorSpace || {
-								primaries: "bt709",
-								transfer: "iec61966-2-1",
-								matrix: "rgb",
-								fullRange: true,
-							};
+							const colorSpace =
+								this.videoColorSpace || ENCODED_H264_COLOR_SPACE_FALLBACK;
 
 							const metadata: EncodedVideoChunkMetadata = {
 								decoderConfig: {

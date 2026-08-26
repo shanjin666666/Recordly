@@ -43,7 +43,7 @@
 			"amongus": "Among Us",
 			"turtle": "Черепаха"
 		},
-		"backgroundBlur": "Размытие фона",
+		"backgroundBlur": "Размытие",
 		"zoomMotionBlur": "Размытие при зуме",
 		"temporalZoomMotionBlur": "Временное размытие зума",
 		"temporalZoomMotionBlurDescription": "Настройка плавности зума по времени и кадрам.",

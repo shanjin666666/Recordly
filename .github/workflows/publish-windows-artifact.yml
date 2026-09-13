@@ -1,0 +1,61 @@
+name: Publish verified Windows artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag
+        required: true
+        type: string
+      run_id:
+        description: Successful Build Electron App run ID
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      BUILD_RUN_ID: ${{ inputs.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify build source matches release
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9.-]+)?$ ]]
+          [[ "$BUILD_RUN_ID" =~ ^[0-9]+$ ]]
+          gh release view "$RELEASE_TAG" >/dev/null
+          RUN_JSON=$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN_ID")
+          test "$(jq -r .conclusion <<< "$RUN_JSON")" = success
+          test "$(jq -r .path <<< "$RUN_JSON")" = .github/workflows/build.yml
+          SOURCE_SHA=$(jq -r .head_sha <<< "$RUN_JSON")
+          git cat-file -e "$RELEASE_TAG^{commit}"
+          git diff --exit-code "$SOURCE_SHA" "$RELEASE_TAG" -- . ':(exclude).github/workflows/**'
+          PACKAGE_VERSION=$(git show "$RELEASE_TAG:package.json" | jq -r .version)
+          test "v$PACKAGE_VERSION" = "$RELEASE_TAG"
+      - name: Download verified build
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x64-release
+          path: release-assets
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.run_id }}
+      - name: Verify checksums and publish
+        shell: bash
+        working-directory: release-assets
+        run: |
+          set -euo pipefail
+          sha256sum --check SHA256SUMS-windows.txt
+          test -s Recordly-windows-x64.exe
+          gh release upload "$RELEASE_TAG" Recordly-windows-x64.exe Recordly-windows-x64.exe.blockmap SHA256SUMS-windows.txt latest.yml --clobber
+          gh release edit "$RELEASE_TAG" --draft=false

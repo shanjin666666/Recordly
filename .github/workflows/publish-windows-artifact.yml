@@ -1,8 +1,18 @@
-name: Publish verified Windows artifact
+name: Publish verified platform artifact
 
 on:
   workflow_dispatch:
     inputs:
+      platform:
+        description: Platform artifact to publish
+        required: true
+        default: windows-x64
+        type: choice
+        options:
+          - windows-x64
+          - macos-arm64
+          - macos-x64
+          - linux-x64
       tag:
         description: Existing release tag
         required: true
@@ -22,6 +32,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_REPO: ${{ github.repository }}
+      PLATFORM: ${{ inputs.platform }}
       RELEASE_TAG: ${{ inputs.tag }}
       BUILD_RUN_ID: ${{ inputs.run_id }}
     steps:
@@ -46,7 +57,7 @@ jobs:
       - name: Download verified build
         uses: actions/download-artifact@v4
         with:
-          name: windows-x64-release
+          name: ${{ inputs.platform }}-release
           path: release-assets
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ inputs.run_id }}
@@ -55,7 +66,19 @@ jobs:
         working-directory: release-assets
         run: |
           set -euo pipefail
-          sha256sum --check SHA256SUMS-windows.txt
-          test -s Recordly-windows-x64.exe
-          gh release upload "$RELEASE_TAG" Recordly-windows-x64.exe Recordly-windows-x64.exe.blockmap SHA256SUMS-windows.txt latest.yml --clobber
+          case "$PLATFORM" in
+            windows-x64) CHECKSUMS=SHA256SUMS-windows.txt; test -s Recordly-windows-x64.exe ;;
+            linux-x64) CHECKSUMS=SHA256SUMS-linux.txt; compgen -G '*.AppImage' >/dev/null ;;
+            macos-arm64|macos-x64) CHECKSUMS="SHA256SUMS-$PLATFORM.txt"; compgen -G '*.dmg' >/dev/null; compgen -G '*.zip' >/dev/null ;;
+            *) exit 1 ;;
+          esac
+          sha256sum --check "$CHECKSUMS"
+          # Keep architecture-specific update metadata from overwriting each other.
+          if [[ "$PLATFORM" == macos-* && -f latest-mac.yml ]]; then
+            METADATA="latest-mac-${PLATFORM#macos-}.yml"
+            mv latest-mac.yml "$METADATA"
+            sed -i "s/  latest-mac.yml$/  $METADATA/" "$CHECKSUMS"
+            sha256sum --check "$CHECKSUMS"
+          fi
+          gh release upload "$RELEASE_TAG" ./* --clobber
           gh release edit "$RELEASE_TAG" --draft=false

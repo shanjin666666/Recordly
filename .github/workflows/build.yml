@@ -3,6 +3,17 @@ name: Build Electron App
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - windows
+          - macos
+          - linux
 
 permissions:
   contents: read
@@ -12,6 +23,7 @@ permissions:
 
 jobs:
   build-windows:
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'windows' }}
     runs-on: windows-latest
     steps:
       - name: Checkout code
@@ -70,6 +82,7 @@ jobs:
           retention-days: 30
 
   build-macos:
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'macos' }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -142,6 +155,7 @@ jobs:
           retention-days: 30
 
   build-linux:
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'linux' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

@@ -31,6 +31,9 @@ concurrency:
 
 jobs:
   prepare-release:
+    # Fork releases can publish already verified artifacts without triggering
+    # upstream signing/distribution jobs. Rebuilds remain available manually.
+    if: github.event_name == 'workflow_dispatch' || github.repository == 'webadderallorg/Recordly'
     name: Prepare release
     runs-on: ubuntu-latest
     outputs:

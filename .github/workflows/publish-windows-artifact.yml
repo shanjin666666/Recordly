@@ -81,4 +81,6 @@ jobs:
             sha256sum --check "$CHECKSUMS"
           fi
           gh release upload "$RELEASE_TAG" ./* --clobber
-          gh release edit "$RELEASE_TAG" --draft=false
+          if [[ "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" == true ]]; then
+            gh release edit "$RELEASE_TAG" --draft=false
+          fi

@@ -51,6 +51,7 @@ import {
 } from "../nativeVideoExport";
 import { isAllowedLocalReadPath, resolveApprovedLocalMediaPath } from "../project/manager";
 import { approveUserPath } from "../utils";
+import { getExportDefaultPath, rememberExportDirectory } from "../export/exportDirectory";
 
 function getPartialExportDestinationPath(destinationPath: string) {
 	const parsed = path.parse(destinationPath);
@@ -853,7 +854,7 @@ export function registerExportHandlers() {
 				const parentWindow = BrowserWindow.fromWebContents(event.sender);
 				const saveDialogOptions: SaveDialogOptions = {
 					title: isGif ? "Save Exported GIF" : "Save Exported Video",
-					defaultPath: path.join(app.getPath("downloads"), fileName),
+					defaultPath: await getExportDefaultPath(fileName),
 					filters,
 					properties: ["createDirectory", "showOverwriteConfirmation"],
 				};
@@ -876,6 +877,7 @@ export function registerExportHandlers() {
 					sidecarPayload,
 				);
 				approveUserPath(result.filePath);
+				await rememberExportDirectory(result.filePath);
 
 				return {
 					success: true,
@@ -1008,7 +1010,7 @@ export function registerExportHandlers() {
 				const parentWindow = BrowserWindow.fromWebContents(event.sender);
 				const saveDialogOptions: SaveDialogOptions = {
 					title: isGif ? "Save Exported GIF" : "Save Exported Video",
-					defaultPath: path.join(app.getPath("downloads"), fileName),
+					defaultPath: await getExportDefaultPath(fileName),
 					filters,
 					properties: ["createDirectory", "showOverwriteConfirmation"],
 				};
@@ -1034,6 +1036,7 @@ export function registerExportHandlers() {
 					sidecarPayload,
 				);
 				approveUserPath(result.filePath);
+				await rememberExportDirectory(result.filePath);
 
 				return {
 					success: true,

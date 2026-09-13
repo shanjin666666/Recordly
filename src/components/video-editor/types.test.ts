@@ -120,6 +120,12 @@ describe("clip timeline mapping", () => {
 		{ id: "clip-2", startMs: 6_000, endMs: 8_000, speed: 2 },
 	];
 
+	it("maps trimmed tail boundaries between source and timeline units after speeding up", () => {
+		const edited = [{ id: "clip-1", startMs: 0, endMs: 5823, speed: 1.5 }];
+		expect(mapSourceTimeToTimelineTime(12297, edited)).toBe(5823);
+		expect(mapTimelineTimeToSourceTime(7000, edited)).toBe(8735);
+	});
+
 	it("maps kept timeline time into source time", () => {
 		expect(mapTimelineTimeToSourceTime(1_500, clips)).toBe(1_500);
 		expect(mapTimelineTimeToSourceTime(7_000, clips)).toBe(8_000);

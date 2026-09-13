@@ -277,7 +277,15 @@ function clampToNearestClipBoundary(
 			const distance = Math.abs(timeMs - boundary);
 			if (distance < nearestDistance) {
 				nearestDistance = distance;
-				nearestTimeMs = Math.round(boundary);
+				nearestTimeMs = Math.round(
+					kind === "timeline"
+						? boundary === clip.startMs
+							? clip.startMs
+							: getClipSourceEndMs(clip)
+						: boundary === clip.startMs
+							? clip.startMs
+							: clip.endMs,
+				);
 			}
 		}
 	}
